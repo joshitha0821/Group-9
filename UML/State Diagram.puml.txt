@@ -1,0 +1,18 @@
+@startuml
+title State Diagram - CacheEntry Lifecycle
+
+[*] --> NotCached
+
+NotCached --> Cached : store(entry)\n(after GenAI/execute)
+Cached --> Cached : directHit++\n(update hits/lastAccess)
+Cached --> Stale : ttlExpired OR\nschemaChanged OR\nlowConfidenceFeedback
+Stale --> Refreshing : refreshTriggered
+Refreshing --> Cached : regenerate OK\n(update entry)
+Refreshing --> Invalid : regenerate failed\n(validation/execution)
+Invalid --> NotCached : purge
+
+Cached --> Purged : manualClear OR\npolicyClear
+Stale --> Purged : purgeStaleBatch
+Purged --> [*]
+
+@enduml
