@@ -1,0 +1,82 @@
+@startuml
+title Collaboration (Communication) Diagram - "Answer Question" (Clean)
+
+' --- Readability ---
+skinparam dpi 220
+skinparam defaultFontSize 18
+skinparam linetype ortho
+skinparam ArrowThickness 2
+skinparam shadowing false
+skinparam roundcorner 14
+skinparam nodesep 60
+skinparam ranksep 70
+
+left to right direction
+
+' --- Objects ---
+object "User" as user
+object "Web UI" as ui
+object "Chat\nController" as cc
+
+object "Cache\nService" as cache
+object "Vector\nSearch" as vector
+object "GenAI SQL\nGenerator" as genai
+object "SQL\nValidator" as validator
+object "Query\nExecutor" as executor
+object "Chart & Summary\nService" as report
+object "Audit\nLogger" as audit
+
+' --- Force layout (hidden links do positioning only) ---
+user -[hidden]-> ui
+ui -[hidden]-> cc
+
+cache -[hidden]-> vector
+vector -[hidden]-> cc
+cc -[hidden]-> genai
+genai -[hidden]-> validator
+validator -[hidden]-> executor
+executor -[hidden]-> report
+report -[hidden]-> audit
+
+' --- Communication links (CALLS ONLY; no return arrows) ---
+user --> ui : 1
+ui --> cc : 2
+
+cc --> cache : 3
+cc --> vector : 4
+
+cc --> genai : 5
+cc --> validator : 6
+cc --> executor : 7
+cc --> report : 8
+
+cc --> cache : 9
+cc --> vector : 10
+cc --> audit : 11
+
+cc --> ui : 12
+ui --> user : 13
+
+legend right
+  **Message Map (returns not drawn to avoid clutter)**
+
+  1: askQuestion(nlText)
+  2: submitQuestion(userId, nlText)
+
+  3: cacheLookup(hash) -> (hit? answer)
+  4: semanticSearch(embedding) -> (hit? answerRef)
+
+  5: generateSQL(nlText, schema) -> sql
+  6: validate(sql) -> ok/reject(reason)
+  7: execute(sql) -> dataset
+  8: buildChartAndSummary(dataset) -> chart, summary
+
+  9: cachePut(hash, answer)
+  10: upsertEmbedding(nlText, answerRef)
+  11: logInteraction(userId, status, latency)
+
+  12: returnResponse(answer)
+  13: displayResponse()
+endlegend
+
+@enduml
