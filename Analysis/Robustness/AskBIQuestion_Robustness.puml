@@ -1,0 +1,51 @@
+@startuml
+' Robustness - UC1: Ask BI Question (NL)
+!pragma teoz true
+title Robustness - UC1 Ask BI Question
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 32
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "Business User" as User
+
+box "GenAI Conversational BI Assistant"
+boundary "Chat UI" as UI
+control  "Chat Controller" as CC
+entity   "Cache" as Cache
+entity   "Vector Index" as VDB
+control  "BI Engine" as Engine
+database "Business DB" as DB
+end box
+
+User -> UI : enterQuestion(nlText)
+UI -> CC : submit(nlText)
+
+CC -> Cache : get(hash)
+alt cache hit
+  Cache --> CC : answer(sql, chart, summary)
+else miss
+  Cache --> CC : miss
+  CC -> VDB : semanticSearch(embedding)
+  alt semantic match
+    VDB --> CC : answerRef
+    CC -> Cache : getByRef(answerRef)
+    Cache --> CC : answer(sql, chart, summary)
+  else no match
+    VDB --> CC : none
+    CC -> Engine : buildAnswer(nlText)
+    Engine -> DB : runReadOnlyQuery()
+    DB --> Engine : dataset
+    Engine --> CC : answer(sql, chart, summary)
+    CC -> Cache : put(hash, answer)
+  end
+end
+
+CC --> UI : returnAnswer(...)
+UI --> User : show(chart, summary, sql)
+@enduml

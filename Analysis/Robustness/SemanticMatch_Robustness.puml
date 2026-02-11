@@ -1,0 +1,42 @@
+@startuml
+' Robustness - UC3: Semantic Match via Vector Search
+!pragma teoz true
+title Robustness - UC3 Semantic Match (Vector Search)
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 30
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "Business User" as User
+
+box "GenAI Conversational BI Assistant"
+boundary "Chat UI" as UI
+control  "Chat Controller" as CC
+entity   "Vector Index" as VDB
+entity   "Cache" as Cache
+entity   "Audit Log" as Audit
+end box
+
+User -> UI : ask(nlText)
+UI -> CC : submit(nlText)
+
+CC -> VDB : semanticSearch(embedding)
+alt match found
+  VDB --> CC : answerRef
+  CC -> Cache : getByRef(answerRef)
+  Cache --> CC : answer(sql, chart, summary)
+  CC -> Audit : logSemanticHit()
+else no match
+  VDB --> CC : none
+  CC -> Audit : logSemanticMiss()
+  CC --> UI : handoffTo(UC4_GenerateSQL)
+end
+
+CC --> UI : returnAnswerOrNextStep()
+UI --> User : display()
+@enduml

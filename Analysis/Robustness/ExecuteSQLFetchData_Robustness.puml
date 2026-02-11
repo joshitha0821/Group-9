@@ -1,0 +1,40 @@
+@startuml
+' Robustness - UC5: Execute SQL and Fetch Data
+!pragma teoz true
+title Robustness - UC5 Execute SQL & Fetch Data
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 30
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "Business User" as User
+
+box "GenAI Conversational BI Assistant"
+boundary "Chat UI" as UI
+control  "Chat Controller" as CC
+control  "Query Executor" as QE
+entity   "DB Connection\nManager" as DBCM
+database "Business DB" as DB
+entity   "Audit Log" as Audit
+end box
+
+User -> UI : run(sql)
+UI -> CC : submitSQL(sql)
+
+CC -> QE : execute(sql)
+QE -> DBCM : getConnection()
+DBCM --> QE : conn
+
+QE -> DB : runReadOnly(sql)
+DB --> QE : dataset
+
+QE -> Audit : logQueryExec(latency, rows)
+QE --> CC : dataset
+CC --> UI : return(dataset)
+UI --> User : displayTableOrNext(UC6)
+@enduml

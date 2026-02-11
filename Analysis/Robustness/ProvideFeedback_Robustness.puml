@@ -1,0 +1,36 @@
+@startuml
+' Robustness - UC7: Provide Feedback (Approve/Disapprove)
+!pragma teoz true
+title Robustness - UC7 Provide Feedback
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 30
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "Business User" as User
+
+box "GenAI Conversational BI Assistant"
+boundary "Feedback UI" as FUI
+control  "Feedback Service" as FS
+entity   "Feedback Store" as FB
+entity   "Cache" as Cache
+entity   "Curation Store\n(Training Data)" as Curate
+entity   "Audit Log" as Audit
+end box
+
+User -> FUI : vote(approve/disapprove)
+FUI -> FS : recordFeedback(answerId, vote)
+
+FS -> FB : saveVote(answerId, vote)
+FS -> Cache : updateTrust(answerId, vote)
+FS -> Curate : markForReview(answerId, vote)
+FS -> Audit : logFeedback(user, vote)
+
+FS --> FUI : ack()
+FUI --> User : thankYou()
+@enduml

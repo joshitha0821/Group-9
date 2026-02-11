@@ -1,0 +1,47 @@
+@startuml
+' Robustness - UC4: Generate SQL via GenAI
+!pragma teoz true
+title Robustness - UC4 Generate SQL via GenAI
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 30
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "Business User" as User
+
+box "GenAI Conversational BI Assistant"
+boundary "Chat UI" as UI
+control  "Chat Controller" as CC
+control  "Prompt Builder" as PB
+control  "SQL Validator" as V
+entity   "Audit Log" as Audit
+end box
+
+actor "LLM Provider" as LLM
+
+User -> UI : ask(nlText)
+UI -> CC : submit(nlText)
+
+CC -> PB : buildPrompt(nlText, schema, policies)
+PB -> LLM : generateSQL(prompt)
+LLM --> PB : sqlCandidate
+
+PB -> V : validate(sqlCandidate)
+alt valid
+  V --> PB : ok(sql)
+  PB --> CC : sql
+  CC -> Audit : logSQLGen(success)
+else invalid
+  V --> PB : reject(reason)
+  PB --> CC : error(reason)
+  CC -> Audit : logSQLGen(failure)
+end
+
+CC --> UI : return(sqlOrError)
+UI --> User : display()
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+' Robustness - UC2: Add Training Data
+!pragma teoz true
+title Robustness - UC2 Add Training Data
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 30
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "System Admin" as Admin
+
+box "GenAI Conversational BI Assistant"
+boundary "Admin Console" as AUI
+control  "Training Data\nManager" as TDM
+entity   "Document Store" as Docs
+entity   "Vector Index" as VDB
+database "Training Data DB" as TDB
+entity   "Audit Log" as Audit
+end box
+
+Admin -> AUI : upload(doc / qaPairs)
+AUI -> TDM : ingest(payload)
+
+TDM -> Docs : storeDocuments()
+TDM -> VDB : upsertEmbeddings()
+TDM -> TDB : saveMetadata(version, owner)
+TDM -> Audit : logIngestion(status)
+
+TDM --> AUI : result(success)
+AUI --> Admin : confirmation()
+@enduml

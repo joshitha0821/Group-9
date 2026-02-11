@@ -1,0 +1,39 @@
+@startuml
+' Robustness - UC6: Visualize & Summarize
+!pragma teoz true
+title Robustness - UC6 Visualize & Summarize
+hide footbox
+
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam dpi 200
+skinparam maxMessageSize 30
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam ParticipantPadding 18
+
+actor "Business User" as User
+
+box "GenAI Conversational BI Assistant"
+boundary "Chat UI" as UI
+control  "Chat Controller" as CC
+control  "Report Service" as RS
+entity   "Viz Templates" as VT
+entity   "Summary Templates" as ST
+entity   "Audit Log" as Audit
+end box
+
+User -> UI : viewResult()
+UI -> CC : requestPresentation(dataset)
+
+CC -> RS : buildChartAndSummary(dataset)
+RS -> VT : chooseChartSpec(dataset)
+VT --> RS : chartSpec
+RS -> ST : buildNarrative(dataset)
+ST --> RS : summaryText
+
+RS -> Audit : logRender(status)
+RS --> CC : (chart, summary)
+CC --> UI : return(chart, summary)
+UI --> User : display(chart, summary)
+@enduml
